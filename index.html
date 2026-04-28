@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{width:100%;min-height:100%;display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;overflow:hidden;background:#dff0fb}
+
+/* ── BACKGROUND ── */
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:linear-gradient(160deg,#dff0fb 0%,#b8dcf5 50%,#e4f5ff 100%)}
+.blob{position:absolute;border-radius:50%;filter:blur(70px);animation:blobFloat ease-in-out infinite}
+.b1{width:450px;height:450px;background:rgba(90,185,255,.22);top:-120px;left:-120px;animation-duration:10s}
+.b2{width:350px;height:350px;background:rgba(140,215,255,.18);bottom:-100px;right:-100px;animation-duration:12s;animation-delay:-4s}
+.b3{width:260px;height:260px;background:rgba(200,235,255,.2);top:45%;left:55%;animation-duration:9s;animation-delay:-6s}
+@keyframes blobFloat{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(28px,-28px) scale(1.07)}66%{transform:translate(-18px,22px) scale(.94)}}
+.ring{position:absolute;border-radius:50%;border:1.5px solid rgba(80,170,230,.2);animation:ringP ease-in-out infinite}
+.r1{width:200px;height:200px;top:5%;left:3%;animation-duration:7s}
+.r2{width:130px;height:130px;bottom:12%;right:5%;animation-duration:9s;animation-delay:-3s}
+.r3{width:90px;height:90px;top:50%;left:8%;animation-duration:6s;animation-delay:-2s}
+@keyframes ringP{0%,100%{transform:scale(1);opacity:.4}50%{transform:scale(1.18);opacity:.9}}
+
+/* ── CARD ── */
+.card{
+  position:relative;z-index:2;
+  width:min(96vw,390px);
+  padding:clamp(14px,4vw,26px);
+  background:rgba(255,255,255,.5);
+  backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  border-radius:36px;
+  border:1.5px solid rgba(255,255,255,.75);
+  box-shadow:0 20px 60px rgba(60,140,210,.18),0 4px 20px rgba(100,180,255,.1),inset 0 1px 0 rgba(255,255,255,.85);
+  animation:cardIn .65s cubic-bezier(.34,1.56,.64,1) both
+}
+@keyframes cardIn{from{opacity:0;transform:scale(.82) translateY(32px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+/* ── DISPLAY ── */
+.display{text-align:right;padding:8px 6px 14px;min-height:148px;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden}
+.hist{height:20px;color:rgba(20,90,150,.32);font-size:13px;font-weight:300;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.expr-line{min-height:22px;color:rgba(20,90,150,.42);font-size:clamp(13px,3vw,16px);font-weight:300;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.main{font-size:clamp(50px,13vw,80px);font-weight:200;color:#0e4d7a;letter-spacing:-2px;line-height:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:font-size .1s}
+.main.pop{animation:numPop .16s cubic-bezier(.34,1.56,.64,1)}
+@keyframes numPop{0%{transform:scale(.94)}55%{transform:scale(1.05)}100%{transform:scale(1)}}
+
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(90,170,230,.28),transparent);margin:8px 0 12px}
+
+/* ── GRID ── */
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(9px,2.4vw,13px)}
+
+/* ── BUTTONS ── */
+.btn{
+  aspect-ratio:1;border-radius:50%;border:none;cursor:pointer;
+  font-family:'Outfit',sans-serif;font-size:clamp(20px,5.5vw,30px);font-weight:400;
+  position:relative;overflow:hidden;outline:none;-webkit-appearance:none;
+  transition:transform .12s cubic-bezier(.34,1.56,.64,1),box-shadow .12s;
+}
+.btn:active{transform:scale(.88)}
+.btn::after{content:'';position:absolute;inset:0;border-radius:50%;background:rgba(255,255,255,.35);transform:scale(0);opacity:0;pointer-events:none;transition:none}
+.btn:active::after{transform:scale(2.2);opacity:1}
+
+.btn-num{background:rgba(255,255,255,.6);color:#0e4d7a;box-shadow:0 4px 14px rgba(80,160,215,.14),inset 0 1px 0 rgba(255,255,255,.9);border:1px solid rgba(140,205,245,.3)}
+.btn-fn{background:rgba(155,210,245,.55);color:#08395e;font-size:clamp(15px,4.2vw,22px);box-shadow:0 4px 14px rgba(70,155,215,.18),inset 0 1px 0 rgba(255,255,255,.7);border:1px solid rgba(110,195,240,.4)}
+.btn-op{background:linear-gradient(145deg,#38b6f0,#1588cc);color:#fff;box-shadow:0 6px 20px rgba(25,130,200,.35),inset 0 1px 0 rgba(255,255,255,.28);border:none}
+.btn-op.lit{background:linear-gradient(145deg,#fff,#e5f5ff);color:#1588cc;box-shadow:0 6px 20px rgba(25,130,200,.18)}
+.btn-eq{background:linear-gradient(145deg,#0ea5e9,#026faa);color:#fff;box-shadow:0 6px 24px rgba(14,165,233,.38),inset 0 1px 0 rgba(255,255,255,.22);border:none}
+
+.btn-zero{border-radius:999px;aspect-ratio:unset;grid-column:span 2;padding-left:clamp(22px,6vw,32px);text-align:left}
+
+/* entrance */
+.btn{opacity:0;transform:scale(.5) translateY(14px)}
+.btn.show{animation:btnIn .42s cubic-bezier(.34,1.56,.64,1) forwards}
+@keyframes btnIn{to{opacity:1;transform:scale(1) translateY(0)}}
+
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.shake{animation:shake .35s ease}
+</style>
+</head>
+<body>
+
+<div class="bg">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
+</div>
+
+<div class="card">
+  <div class="display">
+    <div class="hist" id="hist"></div>
+    <div class="expr-line" id="expr"></div>
+    <div class="main" id="disp">0</div>
+  </div>
+  <div class="divider"></div>
+  <div class="grid" id="grid">
+    <button class="btn btn-fn"  id="acBtn" data-a="ac">AC</button>
+    <button class="btn btn-fn"  data-a="sign">+/−</button>
+    <button class="btn btn-fn"  data-a="pct">%</button>
+    <button class="btn btn-op"  data-a="op" data-v="/">÷</button>
+
+    <button class="btn btn-num" data-a="n" data-v="7">7</button>
+    <button class="btn btn-num" data-a="n" data-v="8">8</button>
+    <button class="btn btn-num" data-a="n" data-v="9">9</button>
+    <button class="btn btn-op"  data-a="op" data-v="*">×</button>
+
+    <button class="btn btn-num" data-a="n" data-v="4">4</button>
+    <button class="btn btn-num" data-a="n" data-v="5">5</button>
+    <button class="btn btn-num" data-a="n" data-v="6">6</button>
+    <button class="btn btn-op"  data-a="op" data-v="-">−</button>
+
+    <button class="btn btn-num" data-a="n" data-v="1">1</button>
+    <button class="btn btn-num" data-a="n" data-v="2">2</button>
+    <button class="btn btn-num" data-a="n" data-v="3">3</button>
+    <button class="btn btn-op"  data-a="op" data-v="+">+</button>
+
+    <button class="btn btn-num btn-zero" data-a="n" data-v="0">0</button>
+    <button class="btn btn-num" data-a="dot">.</button>
+    <button class="btn btn-eq"  data-a="eq">=</button>
+  </div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────
+   CALCULATOR ENGINE  — mirrors iPhone logic
+   operand1  op  operand2  =  result
+   Chained:  press op again → calculate immediately
+   Repeated =: reapply last op + operand2
+───────────────────────────────────────── */
+
+const dispEl = document.getElementById('disp');
+const exprEl = document.getElementById('expr');
+const histEl = document.getElementById('hist');
+const acBtn  = document.getElementById('acBtn');
+
+// ── state ──
+let op1 = null;       // first operand (number)
+let op2 = null;       // second operand for repeat‑equals
+let pendingOp = null; // operator string
+let display = '0';    // what the screen shows
+let newInput = true;  // next digit press starts fresh number
+let lastWasEq = false;
+
+// op symbols for display
+const SYM = {'+':'+', '-':'−', '*':'×', '/':'÷'};
+
+// ── render ──
+function render(pop = true) {
+  let shown = display;
+  // format with commas if pure integer and not mid-decimal
+  if (!shown.includes('.') && !shown.includes('e') && shown !== 'Error') {
+    const n = parseFloat(shown);
+    if (!isNaN(n)) shown = n.toLocaleString('en', {maximumFractionDigits: 10});
+  }
+  // shrink font for long numbers
+  const len = shown.replace(/[,.\-]/g, '').length;
+  dispEl.style.fontSize = len > 11 ? 'clamp(26px,7vw,38px)'
+                        : len > 9  ? 'clamp(32px,9vw,50px)'
+                        : len > 7  ? 'clamp(40px,11vw,62px)' : '';
+  dispEl.textContent = shown;
+  if (pop) { dispEl.classList.remove('pop'); void dispEl.offsetWidth; dispEl.classList.add('pop'); }
+  acBtn.textContent = (display === '0' && op1 === null && pendingOp === null) ? 'AC' : 'C';
+}
+
+function setExpr(str) { exprEl.textContent = str; }
+function setHist(str) { histEl.textContent = str; }
+
+// ── highlight operator button ──
+function hiliteOp(v) {
+  document.querySelectorAll('.btn-op').forEach(b => {
+    b.classList.toggle('lit', b.dataset.v === v);
+  });
+}
+
+// ── safe math ──
+function calc(a, op, b) {
+  switch (op) {
+    case '+': return a + b;
+    case '-': return a - b;
+    case '*': return a * b;
+    case '/': if (b === 0) return null; return a / b;
+  }
+}
+
+// ── format result number ──
+function fmtNum(n) {
+  if (n === null) return 'Error';
+  // avoid floating point noise e.g. 0.1+0.2
+  let s = parseFloat(n.toPrecision(12)).toString();
+  return s;
+}
+
+// ── error ──
+function showError() {
+  display = 'Error';
+  render(false);
+  dispEl.classList.remove('shake'); void dispEl.offsetWidth; dispEl.classList.add('shake');
+  op1 = op2 = pendingOp = null; newInput = true; lastWasEq = false;
+  setExpr(''); setHist('');
+}
+
+/* ── DIGIT ── */
+function pressDigit(v) {
+  lastWasEq = false;
+  if (newInput) {
+    display = v === '0' ? '0' : v;
+    newInput = false;
+  } else {
+    if (display === '0' && v !== '.') display = v;
+    else if (display.length < 12) display += v;
+  }
+  render();
+}
+
+/* ── DECIMAL ── */
+function pressDot() {
+  lastWasEq = false;
+  if (newInput) { display = '0.'; newInput = false; render(); return; }
+  if (!display.includes('.')) display += '.';
+  render();
+}
+
+/* ── OPERATOR ── */
+function pressOp(v) {
+  hiliteOp(v);
+  lastWasEq = false;
+  const cur = parseFloat(display);
+
+  if (pendingOp !== null && !newInput) {
+    // chain: calculate pending first
+    const res = calc(op1, pendingOp, cur);
+    if (res === null) { showError(); return; }
+    op1 = parseFloat(fmtNum(res));
+    display = fmtNum(res);
+    setHist('');
+    setExpr(display + ' ' + SYM[v]);
+    render();
+  } else {
+    op1 = newInput ? op1 : cur;
+    setExpr(fmtNum(op1) + ' ' + SYM[v]);
+  }
+
+  pendingOp = v;
+  op2 = null;       // clear repeat operand
+  newInput = true;
+}
+
+/* ── EQUALS ── */
+function pressEq() {
+  hiliteOp(null);
+
+  if (lastWasEq) {
+    // repeat last operation
+    const res = calc(parseFloat(display), pendingOp, op2);
+    if (res === null) { showError(); return; }
+    setHist(display + ' ' + SYM[pendingOp] + ' ' + op2 + ' =');
+    setExpr(display + ' ' + SYM[pendingOp] + ' ' + op2 + ' =');
+    display = fmtNum(res);
+    render();
+    return;
+  }
+
+  if (pendingOp === null) return;
+
+  const cur = parseFloat(display);
+  op2 = newInput ? parseFloat(display) : cur;  // store for repeat
+  const a = op1 !== null ? op1 : cur;
+  const b = newInput ? a : cur;   // if no second number entered, use first
+  const realB = parseFloat(display);
+
+  const res = calc(a, pendingOp, realB);
+  if (res === null) { showError(); return; }
+
+  setHist(fmtNum(a) + ' ' + SYM[pendingOp] + ' ' + fmtNum(realB) + ' =');
+  setExpr(fmtNum(a) + ' ' + SYM[pendingOp] + ' ' + fmtNum(realB) + ' =');
+  op2 = realB;
+  op1 = null;
+  display = fmtNum(res);
+  newInput = true;
+  lastWasEq = true;
+  render();
+}
+
+/* ── CLEAR ── */
+function pressAC() {
+  if (display !== '0' && !newInput) {
+    // C: just clear current entry
+    display = '0'; newInput = true; render(); return;
+  }
+  // AC: full reset
+  op1 = op2 = pendingOp = null;
+  display = '0'; newInput = true; lastWasEq = false;
+  setExpr(''); setHist('');
+  hiliteOp(null); render();
+}
+
+/* ── SIGN ── */
+function pressSign() {
+  if (display === '0' || display === 'Error') return;
+  display = fmtNum(parseFloat(display) * -1);
+  render();
+}
+
+/* ── PERCENT ── */
+function pressPct() {
+  const v = parseFloat(display);
+  if (isNaN(v)) return;
+  if (op1 !== null && pendingOp !== null) {
+    // e.g. 200 + 10% → 200 + 20
+    display = fmtNum(op1 * v / 100);
+  } else {
+    display = fmtNum(v / 100);
+  }
+  newInput = false;
+  render();
+}
+
+/* ── EVENTS ── */
+document.getElementById('grid').addEventListener('click', e => {
+  const btn = e.target.closest('.btn'); if (!btn) return;
+  switch (btn.dataset.a) {
+    case 'n':    pressDigit(btn.dataset.v); break;
+    case 'dot':  pressDot(); break;
+    case 'op':   pressOp(btn.dataset.v); break;
+    case 'eq':   pressEq(); break;
+    case 'ac':   pressAC(); break;
+    case 'sign': pressSign(); break;
+    case 'pct':  pressPct(); break;
+  }
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key >= '0' && e.key <= '9') pressDigit(e.key);
+  else if (e.key === '.')  pressDot();
+  else if (e.key === '+')  pressOp('+');
+  else if (e.key === '-')  pressOp('-');
+  else if (e.key === '*')  pressOp('*');
+  else if (e.key === '/') { e.preventDefault(); pressOp('/'); }
+  else if (e.key === 'Enter' || e.key === '=') pressEq();
+  else if (e.key === 'Backspace') pressAC();
+  else if (e.key === 'Escape')   { op1=op2=pendingOp=null;display='0';newInput=true;lastWasEq=false;setExpr('');setHist('');hiliteOp(null);render(); }
+  else if (e.key === '%') pressPct();
+});
+
+/* ── entrance animation ── */
+document.querySelectorAll('.btn').forEach((b, i) => {
+  setTimeout(() => b.classList.add('show'), 80 + i * 28);
+});
+
+/* ── spawn bg sparkles ── */
+const bgEl = document.querySelector('.bg');
+for (let i = 0; i < 20; i++) {
+  const s = document.createElement('div');
+  s.style.cssText = `position:absolute;width:${4+Math.random()*5}px;height:${4+Math.random()*5}px;border-radius:50%;background:rgba(255,255,255,.7);left:${Math.random()*100}%;top:${Math.random()*100}%;box-shadow:0 0 6px rgba(100,200,255,.6);animation:sparkle ${2+Math.random()*3}s ease-in-out ${-Math.random()*3}s infinite`;
+  bgEl.appendChild(s);
+}
+const style = document.createElement('style');
+style.textContent = '@keyframes sparkle{0%,100%{opacity:0;transform:scale(0)}50%{opacity:1;transform:scale(1)}}';
+document.head.appendChild(style);
+
+render(false);
+</script>
+</body>
+</html>
